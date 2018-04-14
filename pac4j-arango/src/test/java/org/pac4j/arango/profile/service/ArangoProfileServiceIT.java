@@ -5,6 +5,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.pac4j.arango.profile.ArangoProfile;
+import org.pac4j.arango.test.tools.ArangoServer;
 import org.pac4j.core.credentials.UsernamePasswordCredentials;
 import org.pac4j.core.exception.AccountNotFoundException;
 import org.pac4j.core.exception.BadCredentialsException;
@@ -14,7 +15,6 @@ import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.service.AbstractProfileService;
 import org.pac4j.core.util.TestsConstants;
 import org.pac4j.core.util.TestsHelper;
-import org.pac4j.arango.test.tools.ArangoServer;
 
 import java.util.List;
 import java.util.Map;
@@ -41,12 +41,16 @@ public final class ArangoProfileServiceIT implements TestsConstants {
 
     @Before
     public void setUp() {
-        arangoServer.start(PORT);
+        arangoServer.start();
     }
 
     @After
     public void tearDown() {
         arangoServer.stop();
+    }
+
+    private ArangoDB getClient() {
+        return arangoServer.getClient();
     }
 
     @Test
@@ -90,11 +94,6 @@ public final class ArangoProfileServiceIT implements TestsConstants {
         final UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(GOOD_USERNAME, PASSWORD);
         TestsHelper.expectException(() -> authenticator.validate(credentials, null), TechnicalException.class,
             "passwordAttribute cannot be blank");
-    }
-
-    private ArangoDB getClient() {
-        ArangoDB arangoDb = new ArangoDB.Builder().host("localhost", PORT).build();
-        return arangoDb;
     }
 
     private UsernamePasswordCredentials login(final String username, final String password, final String attribute) {
@@ -169,7 +168,7 @@ public final class ArangoProfileServiceIT implements TestsConstants {
         final List<Map<String, Object>> results = getData(arangoProfileService, ARANGO_ID);
         assertEquals(1, results.size());
         final Map<String, Object> result = results.get(0);
-        assertEquals(6, result.size());
+        assertEquals(5, result.size());
         assertEquals(ARANGO_ID, result.get(ID));
         assertEquals(ARANGO_LINKEDID, result.get(AbstractProfileService.LINKEDID));
         assertNotNull(result.get(AbstractProfileService.SERIALIZED_PROFILE));
@@ -188,7 +187,7 @@ public final class ArangoProfileServiceIT implements TestsConstants {
         final List<Map<String, Object>> results2 = getData(arangoProfileService, ARANGO_ID);
         assertEquals(1, results2.size());
         final Map<String, Object> result2 = results2.get(0);
-        assertEquals(6, result2.size());
+        assertEquals(5, result2.size());
         assertEquals(ARANGO_ID, result2.get(ID));
         assertEquals(ARANGO_LINKEDID2, result2.get(AbstractProfileService.LINKEDID));
         assertNotNull(result2.get(AbstractProfileService.SERIALIZED_PROFILE));
@@ -201,6 +200,6 @@ public final class ArangoProfileServiceIT implements TestsConstants {
     }
 
     private List<Map<String, Object>> getData(final ArangoProfileService service, final String id) {
-        return service.read(null, ID, id);
+        return service.read(null, _KEY, id);
     }
 }

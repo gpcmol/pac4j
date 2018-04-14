@@ -25,6 +25,8 @@ import java.util.Map;
  */
 public class ArangoProfileService extends AbstractProfileService<ArangoProfile> {
 
+    public static final String _KEY = "_key";
+
     private ArangoDB arangoClient;
 
     private String usersDatabase = "users";
@@ -66,9 +68,9 @@ public class ArangoProfileService extends AbstractProfileService<ArangoProfile> 
     @Override
     protected void insert(final Map<String, Object> attributes) {
         final BaseDocument doc = new BaseDocument();
-        for (final Map.Entry<String, Object> entry : attributes.entrySet()) {
-            doc.addAttribute(entry.getKey(), entry.getValue());
-        }
+        doc.setKey((String) attributes.get("id"));
+
+        setValues(doc, attributes);
 
         logger.debug("Insert doc: {}", doc);
         getCollection().insertDocument(doc);
@@ -76,39 +78,37 @@ public class ArangoProfileService extends AbstractProfileService<ArangoProfile> 
 
     @Override
     protected void update(final Map<String, Object> attributes) {
-        String id = null;
         final BaseDocument doc = new BaseDocument();
-        for (final Map.Entry<String, Object> entry : attributes.entrySet()) {
-            final String name = entry.getKey();
-            final Object value = entry.getValue();
-            if (ID.equals(name)) {
-                id = (String) value;
-            } else {
-                doc.addAttribute(entry.getKey(), entry.getValue());
-            }
-        }
+        String id = (String) attributes.get("id");
+        doc.setKey(id);
 
-        CommonHelper.assertNotNull(ID, id);
+        setValues(doc, attributes);
+
+        CommonHelper.assertNotNull(_KEY, id);
         logger.debug("Updating id: {} with doc: {}", id, doc);
         getCollection().updateDocument(id, doc);
     }
 
+    private void setValues(final BaseDocument doc, final Map<String, Object> attributes) {
+        for (final Map.Entry<String, Object> entry : attributes.entrySet()) {
+            doc.addAttribute(entry.getKey(), entry.getValue());
+        }
+    }
+
     @Override
     protected void deleteById(final String id) {
-
         logger.debug("Delete id: {}", id);
         getCollection().deleteDocument(id);
     }
 
     @Override
     protected List<Map<String, Object>> read(final List<String> names, final String key, final String value) {
-
         logger.debug("Reading key / value: {} / {}", key, value);
         final List<Map<String, Object>> listAttributes = new ArrayList<>();
 
-        String queryString = String.format("FOR c IN %s FILTER c.%s == %s RETURN c", usersCollection, key, value);
+        String queryString = String.format("FOR c IN %s FILTER c.%s == '%s' RETURN c", usersCollection, key, value);
 
-        try (final ArangoCursor<BaseDocument> cursor = arangoClient.db().query(queryString, null, null, BaseDocument.class)) {
+        try (final ArangoCursor<BaseDocument> cursor = arangoClient.db("users").query(queryString, null, null, BaseDocument.class)) {
             int i = 0;
             while (cursor.hasNext() && i <= 2) {
                 final BaseDocument result = cursor.next();

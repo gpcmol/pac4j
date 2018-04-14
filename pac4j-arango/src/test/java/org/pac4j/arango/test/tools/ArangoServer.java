@@ -21,13 +21,20 @@ public final class ArangoServer implements TestsConstants {
 
     public final static PasswordEncoder PASSWORD_ENCODER = new ShiroPasswordEncoder(new DefaultPasswordService());
 
-    public void start(final int port) {
-        ArangoDB arangoDb = new ArangoDB.Builder().host("localhost", port).build();
+    public void start() {
+        ArangoDB arangoDb = getClient();
 
         // populate
-        arangoDb.createDatabase("users");
-        arangoDb.db("users").createCollection("users");
+        if (arangoDb.db("users") == null) {
+            arangoDb.createDatabase("users");
+        }
+        if (arangoDb.db("users").collection("users").exists() == false) {
+            arangoDb.db("users").createCollection("users");
+        }
+
         final ArangoCollection collection = arangoDb.db("users").collection("users");
+        collection.truncate();
+
         final String password = PASSWORD_ENCODER.encode(PASSWORD);
         Map<String, Object> properties1 = new HashMap<>();
         properties1.put(USERNAME, GOOD_USERNAME);
@@ -42,9 +49,23 @@ public final class ArangoServer implements TestsConstants {
         properties3.put(USERNAME, MULTIPLE_USERNAME);
         properties3.put(PASSWORD, password);
         collection.insertDocument(new BaseDocument(properties3));
+    }
 
+    public ArangoDB getClient() {
+        String arango_dbHost = "localhost";
+        int arango_dbPort = 8529;
+        String arango_rootUser = "root";
+        String arango_rootPassword = "root";
+
+        ArangoDB arangoDb = new ArangoDB.Builder().host(arango_dbHost, arango_dbPort).user(arango_rootUser).password(arango_rootPassword).build();
+        return arangoDb;
     }
 
     public void stop() {
+        this.cleanup();
+    }
+
+    public void cleanup() {
+        getClient().db("users").collection("users").drop();
     }
 }
