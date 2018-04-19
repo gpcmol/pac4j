@@ -29,7 +29,7 @@ import static org.junit.Assert.*;
  */
 public final class ArangoProfileServiceIT implements TestsConstants {
 
-    private static final int PORT = 37017;
+    String _KEY = "_key";
     private static final String ARANGO_ID = "arangoId";
     private static final String ARANGO_LINKEDID = "arangoLinkedId";
     private static final String ARANGO_LINKEDID2 = "arangoLinkedId2";

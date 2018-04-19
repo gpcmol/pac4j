@@ -57,7 +57,10 @@ public final class ArangoServer implements TestsConstants {
         String arango_rootUser = "root";
         String arango_rootPassword = "root";
 
-        ArangoDB arangoDb = new ArangoDB.Builder().host(arango_dbHost, arango_dbPort).user(arango_rootUser).password(arango_rootPassword).build();
+        ArangoDB arangoDb = new ArangoDB.Builder()
+            .host(arango_dbHost, arango_dbPort)
+            .user(arango_rootUser)
+            .password(arango_rootPassword).build();
         return arangoDb;
     }
 

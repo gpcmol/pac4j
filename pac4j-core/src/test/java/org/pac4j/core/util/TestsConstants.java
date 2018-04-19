@@ -17,7 +17,6 @@ public interface TestsConstants {
     String USERNAME = "username";
     String PASSWORD = "password";
     String KEY = "key";
-    String _KEY = "_key";
     String FAKE_VALUE = "fakeValue";
     String SECRET = "secret";
     String MAC_SECRET = "12345678901234567890123456789012";
